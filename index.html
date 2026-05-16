@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>For Elham</title>
+    <style>
+        body { margin: 0; overflow: hidden; background: black; font-family: Arial, sans-serif; }
+        canvas { display: block; width: 100vw; height: 100vh; }
+        #playButton {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            padding: 20px 40px;
+            font-size: 20px;
+            background: red;
+            color: white;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            z-index: 100;
+            box-shadow: 0 0 20px rgba(255,0,0,0.5);
+        }
+        audio { display: none; }
+    </style>
+</head>
+<body>
+
+    <button id="playButton">Open My Heart 💖</button>
+
+    <canvas id="heart"></canvas>
+    
+    <audio id="myAudio" loop>
+        <source src="song.mp3" type="audio/mpeg">
+    </audio>
+
+<script>
+    const canvas = document.getElementById('heart');
+    const ctx = canvas.getContext('2d');
+    const audio = document.getElementById('myAudio');
+    const playButton = document.getElementById('playButton');
+    
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    let mouse = { x: null, y: null };
+    let isPlaying = false;
+    const words = [];
+    const text = "i love you";
+    const name = "ELHAM";
+
+    playButton.addEventListener('click', () => {
+        audio.play().then(() => {
+            isPlaying = true;
+            playButton.style.display = 'none';
+            animate();
+        }).catch(err => {
+            alert("እባክህ ደግመህ ንካው!");
+        });
+    });
+
+    window.addEventListener('touchstart', e => {
+        if(isPlaying) {
+            mouse.x = e.touches[0].clientX;
+            mouse.y = e.touches[0].clientY;
+        }
+    });
+    window.addEventListener('touchmove', e => {
+        if(isPlaying) {
+            mouse.x = e.touches[0].clientX;
+            mouse.y = e.touches[0].clientY;
+        }
+    });
+    window.addEventListener('touchend', () => { mouse.x = null; mouse.y = null; });
+
+    function getHeartPoint(t) {
+        let x = 16 * Math.pow(Math.sin(t), 3);
+        let y = -(13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t));
+        return { x: x * 12, y: y * 12 };
+    }
+
+    class Word {
+        constructor(index) {
+            this.t = (index / 30) * Math.PI * 2;
+            const pos = getHeartPoint(this.t);
+            this.x = canvas.width/2;
+            this.y = canvas.height/2;
+        }
+        update() {
+            // ፍጥነቱን (Speed) ጨምሬዋለሁ
+            this.t += 0.015; 
+            const basePos = getHeartPoint(this.t);
+            let targetX = canvas.width/2 + basePos.x;
+            let targetY = canvas.height/2 + basePos.y;
+
+            if (mouse.x !== null) {
+                let dx = mouse.x - targetX;
+                let dy = mouse.y - targetY;
+                let dist = Math.sqrt(dx*dx + dy*dy);
+                if (dist < 200) {
+                    targetX += dx * 0.6; targetY += dy * 0.6;
+                }
+            }
+            this.x += (targetX - this.x) * 0.1;
+            this.y += (targetY - this.y) * 0.1;
+        }
+        draw() {
+            ctx.fillStyle = "red";
+            ctx.font = "bold 16px Arial";
+            ctx.textAlign = "center";
+            ctx.fillText(text, this.x, this.y);
+        }
+    }
+
+    for (let i = 0; i < 30; i++) words.push(new Word(i));
+
+    function animate() {
+        if(!isPlaying) return;
+        ctx.fillStyle = "rgba(0, 0, 0, 0.2)";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = "white";
+        ctx.font = "bold 45px sans-serif";
+        ctx.textAlign = "center";
+        ctx.fillText(name, canvas.width/2, canvas.height/2);
+        words.forEach(w => { w.update(); w.draw(); });
+        requestAnimationFrame(animate);
+    }
+</script>
+</body>
+</html>
